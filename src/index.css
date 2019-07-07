@@ -79,3 +79,5 @@ canvas {
   bottom: 0;
   z-index: -1;
 }
+::-moz-selection { background: transparent; }
+::selection { background: transparent; }

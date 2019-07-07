@@ -10,63 +10,129 @@ import { white } from './colors'
 OBJLoader(THREE);
 
 
+function is_touch_device() {
+  let prefixes = ' -webkit- -moz- -o- -ms- '.split(' ');
+  let mq = function(query) {
+    return window.matchMedia(query).matches;
+  }
+  if ('ontouchstart' in window) {
+    return true
+  }
+  // include the 'heartz' as a way to have a non matching MQ to help terminate the join
+  // https://git.io/vznFH
+  let query = ['(', prefixes.join('touch-enabled),('), 'heartz', ')'].join('');
+  return mq(query);
+}
+
+const smoothingThreshold = 20
+
+const material = new THREE.MeshPhysicalMaterial({
+  map: null,
+  color: 0x0D0B16,
+  metalness: 0.2,
+  roughness: 0,
+  opacity: 1,
+  side: THREE.FrontSide,
+  transparent: false,
+  reflectivity: 1,
+  premultipliedAlpha: true,
+})
+
 class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      mouse: {
+      mouse: [{
         x: 0.5,
         y: 0.5
-      },
-      orientation: null
+      }],
+      orientation: [{
+        alpha: 0,
+        beta: 0,
+        gamma: 0
+      }],
+      isTouchDevice: is_touch_device()
     }
     this.THREE = THREE
     this.canvas = React.createRef()
     this.cursor = React.createRef()
+
     this.camera = null
     this.scene = null
     this.renderer = null
 
     this.butterfly = null
     this.skull = null
-    this.material = new THREE.MeshPhysicalMaterial({
-      map: null,
-      color: 0x0D0B16,
-      metalness: 0.2,
-      roughness: 0,
-      opacity: 1,
-      side: THREE.FrontSide,
-      transparent: false,
-      reflectivity: 1,
-      premultipliedAlpha: true,
-    })
     this.pointLight1 = null
     this.pointLight2 = null
     this.pointLight3 = null
   }
   onOrientation (e) {
+    let orientation = [...this.state.orientation]
+    if (orientation.length >= smoothingThreshold) {
+      orientation.shift()
+    }
+    orientation.push({
+      alpha: e.alpha,
+      beta: e.beta,
+      gamma: e.gamma,
+    })
     this.setState({
-      orientation: {
-        alpha: e.alpha,
-        beta: e.beta,
-        gamma: e.gamma,
-      }
+      orientation
     })
   }
   onMouseMove (e) {
-    this.setState({
-      hasMouse: true,
-      mouse: {
-        x: e.clientX / window.innerWidth - 0.5,
-        y: 1 - e.clientY / window.innerHeight
-      }
+    let mouse = [...this.state.mouse]
+    if (mouse.length >= smoothingThreshold) {
+      mouse.shift()
+    }
+    mouse.push({
+      x: e.clientX / window.innerWidth - 0.5,
+      y: 1 - e.clientY / window.innerHeight
     })
+    this.setState({
+      mouse
+    })
+  }
+  smoothMouse () {
+    let sum = this.state.mouse.reduce((acc, cur) => {
+      return {
+        x: acc.x + cur.x,
+        y: acc.y + cur.y
+      }
+    }, {
+      x: 0,
+      y: 0
+    })
+    return {
+      x: sum.x / (this.state.mouse.length || 1),
+      y: sum.y / (this.state.mouse.length || 1)
+    }
+  }
+  smoothOrientation () {
+    let sum = this.state.orientation.reduce((acc, cur) => {
+      return { 
+        alpha: acc.alpha + cur.alpha,
+        beta: acc.beta + cur.beta,
+        gamma: acc.gamma +  cur.gamma
+      }}, {
+        alpha: 0,
+        beta: 0,
+        gamma: 0
+      })
+    return {
+      alpha: sum.alpha / (this.state.orientation.length || 1),
+      beta: sum.beta / (this.state.orientation.length || 1),
+      gamma: sum.gamma / (this.state.orientation.length || 1)
+    }
   }
   init () {
     window.addEventListener('deviceorientation', e => {
       this.onOrientation(e)
     })
-    window.addEventListener('mousemove', this.onMouseMove.bind(this))
+    window.addEventListener('mousemove', e => {
+      this.onMouseMove(e)
+    })
     this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 )
     this.camera.position.y = 400
     this.scene = new THREE.Scene()
@@ -76,7 +142,7 @@ class App extends Component {
     const loader = new this.THREE.OBJLoader()
 
     const boxGeo = new THREE.BoxGeometry(500, 0, 100)
-    const box = new THREE.Mesh( boxGeo, this.material )
+    const box = new THREE.Mesh( boxGeo, material )
     box.position.x = 0
     box.position.y = 0  
     box.position.z = 0
@@ -85,7 +151,7 @@ class App extends Component {
 
     loader.load('/obj/3.obj', ( object ) => {
       this.skull = object
-      this.skull.children[0].material = this.material   
+      this.skull.children[0].material = material   
       this.skull.position.z = -20
       this.setSkullSize()   
       this.scene.add(this.skull)
@@ -139,17 +205,19 @@ class App extends Component {
     }
   }
   animate () {
-    let timer = Date.now() / 1000
+    const timer = Date.now() / 1000
+    const lightRingRadius = 400
+
     if (this.skull) {
-      if (this.state.orientation !== null) {
-        this.skull.rotation.y = -this.state.orientation.gamma * 0.01744444444
-        this.skull.rotation.x = -this.state.orientation.beta * 0.01744444444 * 0.5 -1
+      if (this.state.isTouchDevice) {
+        this.skull.rotation.y = -this.smoothOrientation().gamma * 0.01744444444
+        this.skull.rotation.x = -this.smoothOrientation().beta * 0.01744444444 * 0.5 -1
       } else {
-        this.skull.rotation.y = this.state.mouse.x
-        this.skull.rotation.x = -this.state.mouse.y - 1
+        this.skull.rotation.y = this.smoothMouse().x
+        this.skull.rotation.x = -this.smoothMouse().y - 1
       }
     }
-    let lightRingRadius = 400
+
     this.pointLight1.position.x = Math.cos(timer) * lightRingRadius
     this.pointLight1.position.z = Math.sin(timer) * lightRingRadius
     
@@ -165,9 +233,9 @@ class App extends Component {
     this.animate()
   }
   cursorStyle () {
-    let cursorSize = 6
+    const cursorSize = 6
     return {
-      transform: `translate(${window.innerWidth * this.state.mouse.x - cursorSize / 2}px, ${window.innerHeight / 2 + window.innerHeight * -this.state.mouse.y - cursorSize / 2}px)`,
+      transform: `translate(${window.innerWidth * this.smoothMouse().x - cursorSize / 2}px, ${window.innerHeight / 2 + window.innerHeight * -this.smoothMouse().y - cursorSize / 2}px)`,
       height: cursorSize,
       width: cursorSize,
       borderRadius: '50%',
@@ -187,8 +255,7 @@ class App extends Component {
         </div>
         <Intro />
         <Experiences />
-        {this.state.hasMouse ? (<div className="cursor" ref={this.cursor} style={this.cursorStyle()}></div>) : false}
-        
+        {!this.state.isTouchDevice ? (<div className="cursor" ref={this.cursor} style={this.cursorStyle()}></div>) : false}
       </div>
     )
   }
