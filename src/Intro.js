@@ -19,13 +19,12 @@ export default styled(({ className }) => {
       </Container>
     )
   })`
-  padding-top: 27vh;
+  padding-top: 20vh;
   padding-bottom: 10rem;
-  @media screen and (max-width: 1600px) {
-    min-height: 100vh;
-  }
+
   @media screen and (max-width: 600px) {
-    padding-top: 20vh;
+    padding-top: 15vh;
+    padding-bottom: 8rem;
   }
   .role {
     text-transform: uppercase;

@@ -25,7 +25,8 @@ const getClientEnvironment = require('./env');
 const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
 const ForkTsCheckerWebpackPlugin = require('react-dev-utils/ForkTsCheckerWebpackPlugin');
 const typescriptFormatter = require('react-dev-utils/typescriptFormatter');
-
+const WebappWebpackPlugin = require('webapp-webpack-plugin')
+const PrerenderSpaPlugin = require('prerender-spa-plugin')
 const postcssNormalize = require('postcss-normalize');
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
@@ -475,7 +476,12 @@ module.exports = function(webpackEnv) {
       ],
     },
     plugins: [
+      new WebappWebpackPlugin(path.resolve(__dirname, '..', 'src', 'favicon.png')),
       // Generates an `index.html` file with the <script> injected.
+      isEnvProduction && new PrerenderSpaPlugin({
+        routes: ['/'],
+        staticDir: path.join(__dirname, '../build'),
+      }),
       new HtmlWebpackPlugin(
         Object.assign(
           {},
@@ -608,6 +614,7 @@ module.exports = function(webpackEnv) {
           // The formatter is invoked directly in WebpackDevServerUtils during development
           formatter: isEnvProduction ? typescriptFormatter : undefined,
         }),
+
     ].filter(Boolean),
     // Some libraries import Node modules but don't use them in the browser.
     // Tell Webpack to provide empty mocks for them so importing them works.

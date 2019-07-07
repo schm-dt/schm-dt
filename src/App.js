@@ -17,7 +17,8 @@ class App extends Component {
       mouse: {
         x: 0.5,
         y: 0.5
-      }
+      },
+      orientation: null
     }
     this.THREE = THREE
     this.canvas = React.createRef()
@@ -43,11 +44,12 @@ class App extends Component {
     this.pointLight2 = null
     this.pointLight3 = null
   }
-  onTouchMove (e) {
+  onOrientation (e) {
     this.setState({
-      mouse: {
-        x: e.touches[0].screenX / window.innerWidth - 0.5,
-        y: 1 - e.touches[0].screenY / window.innerHeight
+      orientation: {
+        alpha: e.alpha,
+        beta: e.beta,
+        gamma: e.gamma,
       }
     })
   }
@@ -61,6 +63,9 @@ class App extends Component {
     })
   }
   init () {
+    window.addEventListener('deviceorientation', e => {
+      this.onOrientation(e)
+    })
     window.addEventListener('mousemove', this.onMouseMove.bind(this))
     this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 )
     this.camera.position.y = 400
@@ -87,13 +92,14 @@ class App extends Component {
       this.skull.lookAt(this.camera.position)
     }, null,
     e => {
-      console.error( 'An error happened' )
+      // console.error( 'An error happened' )
     })
 
     this.addLights()
     this.initialiseRenderer()
 
     window.addEventListener('resize', () => {
+      this.setSkullSize()
       if (window.innerWidth > 600) {
         this.updateRenderer()
       }
@@ -126,7 +132,7 @@ class App extends Component {
     this.renderer.setSize( window.innerWidth, window.innerHeight )
   }
   setSkullSize () {
-    if (window.innerWidth > 600) {
+    if (window.innerWidth > 1000) {
       this.skull.children[0].scale.set(1.4, 1.4, 1.4)
     } else {
       this.skull.children[0].scale.set(1, 1, 1)
@@ -135,8 +141,13 @@ class App extends Component {
   animate () {
     let timer = Date.now() / 1000
     if (this.skull) {
-      this.skull.rotation.y = this.state.mouse.x
-      this.skull.rotation.x = -this.state.mouse.y - 1
+      if (this.state.orientation !== null) {
+        this.skull.rotation.y = -this.state.orientation.gamma * 0.01744444444
+        this.skull.rotation.x = -this.state.orientation.beta * 0.01744444444 * 0.5 -1
+      } else {
+        this.skull.rotation.y = this.state.mouse.x
+        this.skull.rotation.x = -this.state.mouse.y - 1
+      }
     }
     let lightRingRadius = 400
     this.pointLight1.position.x = Math.cos(timer) * lightRingRadius
