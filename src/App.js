@@ -51,7 +51,7 @@ class App extends Component {
         beta: 0,
         gamma: 0
       }],
-      isTouchDevice: is_touch_device()
+      isTouchDevice: is_touch_device(),
     }
     this.THREE = THREE
     this.canvas = React.createRef()
@@ -61,7 +61,6 @@ class App extends Component {
     this.scene = null
     this.renderer = null
 
-    this.butterfly = null
     this.skull = null
     this.pointLight1 = null
     this.pointLight2 = null
@@ -146,7 +145,7 @@ class App extends Component {
     box.position.x = 0
     box.position.y = 0  
     box.position.z = 0
-    
+
     this.scene.add(box)
 
     loader.load('/obj/3.obj', ( object ) => {
@@ -233,9 +232,10 @@ class App extends Component {
     this.animate()
   }
   cursorStyle () {
+    let lastmouse = this.state.mouse[this.state.mouse.length - 1]
     const cursorSize = 6
     return {
-      transform: `translate(${window.innerWidth * this.smoothMouse().x - cursorSize / 2}px, ${window.innerHeight / 2 + window.innerHeight * -this.smoothMouse().y - cursorSize / 2}px)`,
+      transform: `translate(${window.innerWidth * lastmouse.x - cursorSize / 2}px, ${window.innerHeight / 2 + window.innerHeight * -lastmouse.y - cursorSize / 2}px)`,
       height: cursorSize,
       width: cursorSize,
       borderRadius: '50%',
@@ -243,7 +243,7 @@ class App extends Component {
       position: 'fixed',
       top: '50%',
       left: '50%',
-      zIndex: 100
+      zIndex: 100,
     }
   }
   render () {
