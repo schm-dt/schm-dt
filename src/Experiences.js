@@ -17,9 +17,7 @@ export default styled(({ className }) => {
               <ul>
                 <li>AWS ECS</li>
                 <li>AWS S3</li>
-                <li>AWS Lambda</li>
                 <li>Docker</li>
-                <li>Terraform</li>
                 <li>Socket.io</li>
                 <li>Electron</li>
                 <li>Vue.js</li>
