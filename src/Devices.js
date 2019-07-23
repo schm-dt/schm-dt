@@ -8,6 +8,8 @@ import * as OBJLoader from 'three-obj-loader'
 import { smoothOrientation, smoothMouse } from './lib'
 import { videoMaterial } from './materials'
 
+import { TweenLite, Back } from 'gsap/all'
+
 OBJLoader(THREE)
 
 class Devices extends Component {
@@ -29,9 +31,38 @@ class Devices extends Component {
 
         this.loader = new this.THREE.OBJLoader()
     }
+    componentDidUpdate (prevProps, prevState) {
+        if (!prevProps.scrolled && this.props.scrolled) {
+            this.showDevice()
+        }
+        if (prevProps.scrolled && !this.props.scrolled) {
+            this.hideDevice()
+        }
+    }
+    showDevice () {
+        if (!this.device) {
+            return false
+        }
+        TweenLite.to(this.device.position, 1, {z: 0, x: 0, y: 200, ease: Back.easeOut.config(1)  })
+        this.device.traverse(node => {
+            if ( node.material ) {
+                TweenLite.to(node.material, 1, {opacity: 1, ease: Back.easeOut.config(1) })
+            }
+        })
+    }
+    hideDevice () {
+        if (!this.device) {
+            return false
+        }
+        TweenLite.to(this.device.position, 1, {z: 0, x: 200, y: -100})
+        this.device.traverse(node => {
+            if ( node.material ) {
+                TweenLite.to(node.material, 0.25, {opacity: 0})
+            }
+        })
+    }
 
     async init () {
-    
         this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 )
         this.camera.position.y = 400
         this.scene = new THREE.Scene()
@@ -81,10 +112,22 @@ class Devices extends Component {
                 this.device = new THREE.Group()
                 this.device.add(this.phone)
                 this.device.add(this.screen)
-                this.device.position.y = 200
+                this.device.position.y = -50
+                this.device.position.x = 300
                 this.device.scale.set(20, 20, 20)
+                this.device.traverse(node => {
+                    if ( node.material ) {
+                        node.material.opacity = 0
+                        node.material.transparent = true
+                    }
+                })
     
                 this.focus.add(this.device)
+                if (this.props.scrolled) {
+                    this.showDevice()
+                } else {
+                    this.hideDevice()
+                }
                 resolve()
             })
         })
@@ -145,17 +188,6 @@ class Devices extends Component {
             } else {
                 this.device.rotation.z = -smoothMouse(this.props.mouse).x * 0.5
                 this.device.rotation.x = -smoothMouse(this.props.mouse).y * 0.5 + .2
-
-
-                /// TESTING
-                this.device.position.y = (Math.sin(Date.now() / 500) - 1) * 10 + 200
-                // console.log(this.device.traverse)
-                this.device.traverse(node => {
-                    if( node.material ) {
-                        node.material.opacity = (Math.sin(Date.now() / 500) * 0.5 + 0.5);
-                        node.material.transparent = true;
-                    }
-                })
             }
         }
         

@@ -59,7 +59,7 @@ class App extends Component {
     })
     this.setState({ mouse })
   }
-  onScroll (e) {
+  onScroll () {
     let scroll = [...this.state.scroll]
     if (scroll.length >= smoothingThreshold) {
       scroll.shift()
@@ -93,7 +93,8 @@ class App extends Component {
     window.addEventListener('resize', this.updateWindowSize.bind(this))
     window.addEventListener('deviceorientation', e => this.onOrientation(e))
     window.addEventListener('mousemove', e => this.onMouseMove(e))
-    window.addEventListener('scroll', e => this.onScroll(e))
+    window.addEventListener('scroll', e => this.onScroll())
+    this.onScroll()
   }
   scrolled () {
     return this.state.scroll[this.state.scroll.length - 1] > this.state.windowHeight / 6
@@ -105,7 +106,7 @@ class App extends Component {
         <Skull scrolled={this.scrolled()} isTouchDevice={this.state.isTouchDevice} orientation={this.state.orientation} mouse={this.state.mouse} />
         <Devices scrolled={this.scrolled()} isTouchDevice={this.state.isTouchDevice} orientation={this.state.orientation} mouse={this.state.mouse} />
         <Intro />
-        <Portfolio />
+        <Portfolio scrolled={this.scrolled()} />
         <Experiences />
         {!this.state.isTouchDevice ? (<div className="cursor" ref={this.cursor} style={this.cursorStyle()}></div>) : false}
       </div>
@@ -122,8 +123,20 @@ export default styled(App)`
   p {
     font-size: 18px;
     line-height: 1.7;
+    margin-bottom: 1em;
     @media screen and (max-width: 960px) {
         font-size: 16px;
     }
+  }
+  /deep/ h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5em;
+    line-height: 1.5;
+    @media screen and (max-width: 600px){
+      font-size: 1.2rem;
+    }
+  }
+  /deep/ b {
+    font-weight: bold;
   }
 `

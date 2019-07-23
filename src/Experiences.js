@@ -2,6 +2,23 @@ import React from 'react'
 import styled from 'styled-components'
 import Heading from './Heading'
 import Container from './Container'
+import { TechList } from './TechList' 
+
+const romeoTech = [
+  'AWS ECS',
+  'AWS S3',
+  'Docker',
+  'Socket.io',
+  'Electron',
+  'Vue.js',
+  'GraphQL',
+  'Mongoose/MongoDB',
+  'Node.js',
+  'Gulp',
+  'SASS/SCSS',
+  'WordPress',
+  'WooCommerce',
+]
 
 export default styled(({ className }) => {
     return (
@@ -14,21 +31,7 @@ export default styled(({ className }) => {
               <span className="experience-item__years">July 2017 &ndash; Current</span>
               <p></p>
               <h4>Technologies Used</h4>
-              <ul>
-                <li>AWS ECS</li>
-                <li>AWS S3</li>
-                <li>Docker</li>
-                <li>Socket.io</li>
-                <li>Electron</li>
-                <li>Vue.js</li>
-                <li>GraphQL</li>
-                <li>Mongoose/MongoDB</li>
-                <li>Node.js</li>
-                <li>Gulp</li>
-                <li>SASS/SCSS</li>
-                <li>WordPress</li>
-                <li>WooCommerce</li>
-              </ul>
+              <TechList tech={romeoTech} />
             </div>
             <div className="experience-item">
               <h3>Margin Media — Lead Developer</h3>
@@ -62,14 +65,7 @@ export default styled(({ className }) => {
     font-weight: 300;
 
   }
-  h3 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5em;
-    line-height: 1.5;
-    @media screen and (max-width: 600px){
-      font-size: 1.2rem;
-    }
-  }
+
   h4 {
     text-transform: uppercase;
     letter-spacing: 0.07em;
