@@ -5,80 +5,61 @@ import loopvideo from './m+t.mp4'
 import * as THREE from 'three'
 import * as OBJLoader from 'three-obj-loader'
 
-import { smoothScroll, smoothOrientation, smoothMouse } from './lib'
-import { glassMaterial, skullMaterial } from './materials'
+import { smoothOrientation, smoothMouse } from './lib'
+import { videoMaterial } from './materials'
 
 OBJLoader(THREE)
 
-class Skull extends Component {
+class Devices extends Component {
     constructor (props) {
         super(props)
         this.canvas = React.createRef()
+        this.loopvideo = React.createRef()
+
         this.THREE = THREE
 
         this.camera = null
         this.scene = null
         this.renderer = null
 
-        this.skull = null
         this.pointLight1 = null
         this.pointLight2 = null
         this.pointLight3 = null
         this.pointLight4 = null
 
-        this.loopvideo = React.createRef()
+        this.loader = new this.THREE.OBJLoader()
     }
-    init () {
-        const loader = new this.THREE.OBJLoader()
+
+    async init () {
     
         this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 )
         this.camera.position.y = 400
         this.scene = new THREE.Scene()
+        this.scene.fog = new THREE.Fog(0x000000)
         this.scene.background = 0x020204
         this.scene.add(this.camera)
     
         this.loopvideo.current.play()
-        let texture = new THREE.VideoTexture( this.loopvideo.current )
-        texture.minFilter = THREE.LinearFilter
-        texture.magFilter = THREE.LinearFilter
 
-    
-        let displayMaterial = new THREE.MeshBasicMaterial( { map: texture, overdraw: false, side: THREE.FrontSide } )
         let displayGeo = new THREE.PlaneGeometry( 2.4, 4.35, 1 )
-        let display = new THREE.Mesh( displayGeo, displayMaterial )
-        this.scene.add(display)
-    
-        let glassThickness = 0.0001
-        let glassGeometry = new THREE.BoxGeometry(2.4, 4.35, glassThickness)
-        let glass = new THREE.Mesh(glassGeometry, glassMaterial)
-        glass.position.set(0, 0, glassThickness);
-    
-        let screen = new THREE.Group()
-        this.screen = screen
-        // screen.add(glass)
-        screen.add(display)
-        screen.rotateX(-1.5708)
-        screen.rotateY(0)
-        screen.rotateZ(0)
-        screen.position.set(0, 0.16, 0)
+        let display = new THREE.Mesh( displayGeo, videoMaterial(this.loopvideo.current) )
+        
+        this.screen = new THREE.Group()
+        this.screen.add(display)
+        this.screen.rotateX(-1.5708)
+        this.screen.rotateY(0)
+        this.screen.rotateZ(0)
+        this.screen.position.set(0, 0.16, 0)
 
-        // Load in phone
-        loader.load('/obj/pixel.obj', object => {
-          this.phone = object
-          this.phone.position.y = 0
-          this.phone.scale.set(1, 0.9, 1)
-          this.phone.lookAt(this.camera.position)
-
-          let device = new THREE.Group()
-          this.device = device
-          device.add(this.phone)
-          device.add(this.screen)
-          device.position.y = 200
-          device.scale.set(20, 20, 20)
-          this.scene.add(device)
-        })
+        // Group all devices using this 'focus' group
+        let focus = new THREE.Group()
+        this.focus = focus
+        this.focus.position.x = 50
+        this.scene.add(this.focus)
 
         this.addLights()
+        await this.addDevice()
+
         this.initialiseRenderer()
     
         window.addEventListener('resize', () => {
@@ -87,6 +68,29 @@ class Skull extends Component {
           }
         })
       }
+
+      // Load in phone
+      addDevice () {
+        return new Promise((resolve, reject) => {
+            this.loader.load('/obj/pixel.obj', object => {
+                this.phone = object
+                this.phone.position.y = 0
+                this.phone.scale.set(1, 0.9, 1)
+                this.phone.lookAt(this.camera.position)
+    
+                this.device = new THREE.Group()
+                this.device.add(this.phone)
+                this.device.add(this.screen)
+                this.device.position.y = 200
+                this.device.scale.set(20, 20, 20)
+    
+                this.focus.add(this.device)
+                resolve()
+            })
+        })
+      }
+
+      // Load lights
       addLights () {
         this.pointLight1 = new THREE.PointLight( 0xFF0000,  )
         this.pointLight1.position.set( 150, 150, 150 )
@@ -100,11 +104,12 @@ class Skull extends Component {
         this.pointLight4 = new THREE.PointLight( 0xffffff, 0.2 )
         this.pointLight4.position.set( -50, 200, -100 )    
 
-        this.scene.add( this.pointLight1 )
-        this.scene.add( this.pointLight2 )
-        this.scene.add( this.pointLight3 )
-        this.scene.add( this.pointLight4 )
+        this.focus.add(this.pointLight1)
+        this.focus.add(this.pointLight2)
+        this.focus.add(this.pointLight3)
+        this.focus.add(this.pointLight4)
       }
+
       initialiseRenderer () {
         this.renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } )
         this.renderer.setClearColor( 0xffffff, 0)
@@ -112,38 +117,54 @@ class Skull extends Component {
         this.renderer.setSize( window.innerWidth, window.innerHeight )
         this.canvas.current.appendChild( this.renderer.domElement )
       }
+
       updateRenderer () {
         this.camera.aspect = window.innerWidth / window.innerHeight
         this.camera.updateProjectionMatrix()
         this.renderer.setSize( window.innerWidth, window.innerHeight )
       }
+
       animate () {
         const timer = Date.now() / 1000
         const lightRingRadius = 400
 
+        if (this.pointLight1) {
+            this.pointLight1.position.x = Math.cos(timer) * lightRingRadius
+            this.pointLight1.position.z = Math.sin(timer) * lightRingRadius
+        }
     
-        this.pointLight1.position.x = Math.cos(timer) * lightRingRadius
-        this.pointLight1.position.z = Math.sin(timer) * lightRingRadius
-    
+        if (this.pointLight2) {
+            this.pointLight2.position.x = Math.sin(timer) * lightRingRadius
+            this.pointLight2.position.z = Math.cos(timer) * lightRingRadius
+        }
+
         if (this.device) {
             if (this.props.isTouchDevice) {
                 this.device.rotation.y = -smoothOrientation(this.props.orientation).gamma * 0.01744444444
                 this.device.rotation.x = -smoothOrientation(this.props.orientation).beta * 0.01744444444 * 0.5 - 1
             } else {
-                this.device.rotation.y = -smoothMouse(this.props.mouse).x * 0.5
+                this.device.rotation.z = -smoothMouse(this.props.mouse).x * 0.5
                 this.device.rotation.x = -smoothMouse(this.props.mouse).y * 0.5 + .2
+
+
+                /// TESTING
+                this.device.position.y = (Math.sin(Date.now() / 500) - 1) * 10 + 200
+                // console.log(this.device.traverse)
+                this.device.traverse(node => {
+                    if( node.material ) {
+                        node.material.opacity = (Math.sin(Date.now() / 500) * 0.5 + 0.5);
+                        node.material.transparent = true;
+                    }
+                })
             }
         }
         
-        this.pointLight2.position.x = Math.sin(timer) * lightRingRadius
-        this.pointLight2.position.z = Math.cos(timer) * lightRingRadius
-    
         this.camera.lookAt( this.scene.position )
         this.renderer.render( this.scene, this.camera )
         requestAnimationFrame( this.animate.bind(this) )
       }
-      componentDidMount() {
-        this.init()
+      async componentDidMount() {
+        await this.init()
         this.animate()
       }
     render () {
@@ -159,7 +180,7 @@ class Skull extends Component {
     }
 }
 
-export default styled(Skull)`
+export default styled(Devices)`
 video {
     position: fixed;
     top: 100%;

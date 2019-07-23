@@ -83,6 +83,7 @@ export default styled(({ className }) => {
   ul {
     display: block;
     margin-left: -0.5em;
+    max-width: 600px;
   }
   li {
     display: inline-block;

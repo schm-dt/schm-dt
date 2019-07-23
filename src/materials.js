@@ -20,3 +20,10 @@ export const glassMaterial = new THREE.MeshPhysicalMaterial({
     opacity: 0.1,
     side: THREE.DoubleSide
 })
+
+export const videoMaterial = (videoEl) => {
+    let texture = new THREE.VideoTexture( videoEl )
+    texture.minFilter = THREE.LinearFilter
+    texture.magFilter = THREE.LinearFilter
+    return new THREE.MeshBasicMaterial( { map: texture, overdraw: false, side: THREE.FrontSide } )
+}
