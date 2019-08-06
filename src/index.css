@@ -21,6 +21,10 @@ article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
 	display: block;
 }
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
 body {
 	line-height: 1;
 }
@@ -78,7 +82,6 @@ canvas {
   left: 0; right: 0;
   bottom: 0;
   z-index: -1;
-  /* filter: blur(20px); */
 }
 ::-moz-selection { background: transparent; }
 ::selection { background: transparent; }

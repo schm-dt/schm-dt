@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import styled from 'styled-components'
+import throttle from 'lodash.throttle'
 
 import Intro from './Intro'
 import Experiences from './Experiences'
@@ -10,8 +11,6 @@ import { isTouchDevice } from './lib'
 
 import Skull from './Skull'
 import Portfolio from './Portfolio'
-import Devices from './Devices'
-
 const smoothingThreshold = 10
 
 class App extends Component {
@@ -32,7 +31,7 @@ class App extends Component {
       ],
       isTouchDevice: isTouchDevice(),
       windowHeight: window.innerHeight,
-      windowWidth: window.innerWidth
+      windowWidth: window.innerWidth,
     }
     this.cursor = React.createRef()
   }
@@ -60,7 +59,7 @@ class App extends Component {
     this.setState({ mouse })
   }
   onScroll () {
-    let scroll = [...this.state.scroll]
+    const scroll = [...this.state.scroll]
     if (scroll.length >= smoothingThreshold) {
       scroll.shift()
     }
@@ -81,6 +80,7 @@ class App extends Component {
       top: '50%',
       left: '50%',
       zIndex: 100,
+      pointerEvents: 'none'
     }
   }
   updateWindowSize () {
@@ -90,23 +90,30 @@ class App extends Component {
     })
   }
   componentDidMount () {
-    window.addEventListener('resize', this.updateWindowSize.bind(this))
-    window.addEventListener('deviceorientation', e => this.onOrientation(e))
-    window.addEventListener('mousemove', e => this.onMouseMove(e))
-    window.addEventListener('scroll', e => this.onScroll())
+    window.addEventListener('resize', throttle(this.updateWindowSize.bind(this), 100))
+    window.addEventListener('deviceorientation', throttle(e => this.onOrientation(e), 30))
+    window.addEventListener('mousemove', throttle(e => this.onMouseMove(e), 30))
+    window.addEventListener('scroll', throttle(e => this.onScroll(), 200))
     this.onScroll()
   }
   scrolled () {
-    return this.state.scroll[this.state.scroll.length - 1] > this.state.windowHeight / 6
+    return this.state.scroll[this.state.scroll.length - 1] > 50
   }
   render () {
     const { className } = this.props
     return (
       <div className={ className }>
-        <Skull scrolled={this.scrolled()} isTouchDevice={this.state.isTouchDevice} orientation={this.state.orientation} mouse={this.state.mouse} />
-        <Devices scrolled={this.scrolled()} isTouchDevice={this.state.isTouchDevice} orientation={this.state.orientation} mouse={this.state.mouse} />
+        <Skull
+          scrolled={this.scrolled()}
+          isTouchDevice={this.state.isTouchDevice}
+          orientation={this.state.orientation}
+          mouse={this.state.mouse} />
         <Intro />
-        <Portfolio scrolled={this.scrolled()} />
+        <Portfolio
+          scrolled={this.scrolled()}
+          isTouchDevice={this.state.isTouchDevice}
+          orientation={this.state.orientation}
+          mouse={this.state.mouse} />
         <Experiences />
         {!this.state.isTouchDevice ? (<div className="cursor" ref={this.cursor} style={this.cursorStyle()}></div>) : false}
       </div>
@@ -116,10 +123,7 @@ class App extends Component {
 
 export default styled(App)`
   color: ${white};
-  padding: 0 6rem 20vh;
-  @media screen and (max-width: 600px) {
-    padding: 0 2.5rem 20vh;
-  }
+
   p {
     font-size: 18px;
     line-height: 1.7;

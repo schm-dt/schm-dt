@@ -20,11 +20,17 @@ export default styled(({ className }) => {
     )
   })`
   padding-top: 20vh;
-  padding-bottom: 10rem;
-
   @media screen and (max-width: 600px) {
     padding-top: 15vh;
     padding-bottom: 8rem;
+  }
+  @media screen and (min-width: 601px) {
+    padding-top: 15vh;
+    padding-bottom: 8rem;
+    padding-bottom: 30vh;
+    min-height: 100vh;
+    display: flex;
+    align-items:center;
   }
   .role {
     text-transform: uppercase;

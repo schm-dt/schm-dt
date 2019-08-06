@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import styled from 'styled-components'
-import loopvideo from './m+t.mp4'
+import loopvideo from './mandt.mp4'
 
 import * as THREE from 'three'
 import * as OBJLoader from 'three-obj-loader'
@@ -8,13 +8,13 @@ import * as OBJLoader from 'three-obj-loader'
 import { smoothOrientation, smoothMouse } from './lib'
 import { videoMaterial } from './materials'
 
-import { TweenLite, Back } from 'gsap/all'
-
 OBJLoader(THREE)
+const lightRingRadius = 400
 
 class Devices extends Component {
     constructor (props) {
         super(props)
+        this.root = React.createRef()
         this.canvas = React.createRef()
         this.loopvideo = React.createRef()
 
@@ -31,36 +31,6 @@ class Devices extends Component {
 
         this.loader = new this.THREE.OBJLoader()
     }
-    componentDidUpdate (prevProps, prevState) {
-        if (!prevProps.scrolled && this.props.scrolled) {
-            this.showDevice()
-        }
-        if (prevProps.scrolled && !this.props.scrolled) {
-            this.hideDevice()
-        }
-    }
-    showDevice () {
-        if (!this.device) {
-            return false
-        }
-        TweenLite.to(this.device.position, 1, {z: 0, x: 0, y: 200, ease: Back.easeOut.config(1)  })
-        this.device.traverse(node => {
-            if ( node.material ) {
-                TweenLite.to(node.material, 1, {opacity: 1, ease: Back.easeOut.config(1) })
-            }
-        })
-    }
-    hideDevice () {
-        if (!this.device) {
-            return false
-        }
-        TweenLite.to(this.device.position, 1, {z: 0, x: 200, y: -100})
-        this.device.traverse(node => {
-            if ( node.material ) {
-                TweenLite.to(node.material, 0.25, {opacity: 0})
-            }
-        })
-    }
 
     async init () {
         this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 )
@@ -72,8 +42,8 @@ class Devices extends Component {
     
         this.loopvideo.current.play()
 
-        let displayGeo = new THREE.PlaneGeometry( 2.4, 4.35, 1 )
-        let display = new THREE.Mesh( displayGeo, videoMaterial(this.loopvideo.current) )
+        const displayGeo = new THREE.PlaneGeometry( 2.4, 4.35, 1 )
+        const display = new THREE.Mesh( displayGeo, videoMaterial(this.loopvideo.current) )
         
         this.screen = new THREE.Group()
         this.screen.add(display)
@@ -83,9 +53,10 @@ class Devices extends Component {
         this.screen.position.set(0, 0.16, 0)
 
         // Group all devices using this 'focus' group
-        let focus = new THREE.Group()
+        const focus = new THREE.Group()
         this.focus = focus
-        this.focus.position.x = 50
+        this.updateDevicePosition()
+
         this.scene.add(this.focus)
 
         this.addLights()
@@ -94,14 +65,12 @@ class Devices extends Component {
         this.initialiseRenderer()
     
         window.addEventListener('resize', () => {
-          if (window.innerWidth > 600) {
             this.updateRenderer()
-          }
         })
-      }
+    }
 
-      // Load in phone
-      addDevice () {
+    // Load in phone
+    addDevice () {
         return new Promise((resolve, reject) => {
             this.loader.load('/obj/pixel.obj', object => {
                 this.phone = object
@@ -112,100 +81,107 @@ class Devices extends Component {
                 this.device = new THREE.Group()
                 this.device.add(this.phone)
                 this.device.add(this.screen)
-                this.device.position.y = -50
-                this.device.position.x = 300
+
                 this.device.scale.set(20, 20, 20)
-                this.device.traverse(node => {
-                    if ( node.material ) {
-                        node.material.opacity = 0
-                        node.material.transparent = true
-                    }
-                })
-    
+
                 this.focus.add(this.device)
-                if (this.props.scrolled) {
-                    this.showDevice()
-                } else {
-                    this.hideDevice()
-                }
                 resolve()
             })
         })
-      }
+    }
 
-      // Load lights
-      addLights () {
-        this.pointLight1 = new THREE.PointLight( 0xFF0000,  )
-        this.pointLight1.position.set( 150, 150, 150 )
+    // Load lights
+    addLights () {
+        this.pointLight1 = new THREE.PointLight(0xFF0000, 1)
+        this.pointLight1.position.set( 150, 0, 150 )
         
-        this.pointLight2 = new THREE.PointLight( 0x0000FF,  )
-        this.pointLight2.position.set( -150, 50, 150 )
+        this.pointLight2 = new THREE.PointLight(0x0000FF, 1)
+        this.pointLight2.position.set( -150, 0, 150 )
     
-        this.pointLight3 = new THREE.PointLight( 0xffffff, 0.2 )
-        this.pointLight3.position.set( 50, 200, 100 )
+        this.pointLight3 = new THREE.PointLight(0xffffff, 0.2)
+        this.pointLight3.position.set( 50, 0, 100 )
 
-        this.pointLight4 = new THREE.PointLight( 0xffffff, 0.2 )
-        this.pointLight4.position.set( -50, 200, -100 )    
+        this.pointLight4 = new THREE.PointLight(0xffffff, 0.2)
+        this.pointLight4.position.set( -50, 0, -100 )    
 
         this.focus.add(this.pointLight1)
         this.focus.add(this.pointLight2)
         this.focus.add(this.pointLight3)
         this.focus.add(this.pointLight4)
-      }
+    }
 
-      initialiseRenderer () {
-        this.renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } )
+    initialiseRenderer () {
+        this.renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true, canvas: this.canvas.current } )
         this.renderer.setClearColor( 0xffffff, 0)
-        this.renderer.setPixelRatio( window.devicePixelRatio )
-        this.renderer.setSize( window.innerWidth, window.innerHeight )
-        this.canvas.current.appendChild( this.renderer.domElement )
-      }
+        this.updateRenderer()
+    }
 
-      updateRenderer () {
-        this.camera.aspect = window.innerWidth / window.innerHeight
-        this.camera.updateProjectionMatrix()
-        this.renderer.setSize( window.innerWidth, window.innerHeight )
-      }
-
-      animate () {
-        const timer = Date.now() / 1000
-        const lightRingRadius = 400
-
-        if (this.pointLight1) {
-            this.pointLight1.position.x = Math.cos(timer) * lightRingRadius
-            this.pointLight1.position.z = Math.sin(timer) * lightRingRadius
+    updateRenderer () {
+        const width = window.innerWidth
+        if (window.innerWidth >= 600) {
+            const height = window.innerHeight
+            this.camera.aspect = width / height
+            this.camera.updateProjectionMatrix()
+            this.renderer.setSize( width, height )
+        } else {
+            let height = width
+            if (height < 500) height = 500
+            this.camera.aspect = width / height
+            this.camera.updateProjectionMatrix()
+            this.renderer.setSize(width, height)
         }
-    
-        if (this.pointLight2) {
-            this.pointLight2.position.x = Math.sin(timer) * lightRingRadius
-            this.pointLight2.position.z = Math.cos(timer) * lightRingRadius
+        this.renderer.setPixelRatio(window.innerWidth < 1600 ? 2 : 1)
+        this.updateDevicePosition()
+    }
+    updateDevicePosition () {
+        this.focus.position.y = 200
+        if (window.innerWidth >= 960) {
+            this.focus.position.x = 50
+        } else {
+            this.focus.position.x = 0
         }
+    }
+    updateDeviceRotation () {
 
-        if (this.device) {
             if (this.props.isTouchDevice) {
-                this.device.rotation.y = -smoothOrientation(this.props.orientation).gamma * 0.01744444444
-                this.device.rotation.x = -smoothOrientation(this.props.orientation).beta * 0.01744444444 * 0.5 - 1
+                this.focus.rotation.z = -smoothOrientation(this.props.orientation).gamma * 0.01744444444
             } else {
-                this.device.rotation.z = -smoothMouse(this.props.mouse).x * 0.5
-                this.device.rotation.x = -smoothMouse(this.props.mouse).y * 0.5 + .2
+                this.focus.rotation.z = -smoothMouse(this.props.mouse).x * 0.5
+                this.focus.rotation.x = -smoothMouse(this.props.mouse).y * 0.5 + .2
             }
-        }
+
+    }
+    animate () {
+        if (this.props.isVisible) {
+            const timer = Date.now() / 1000
+    
+            if (this.pointLight1) {
+                this.pointLight1.position.x = Math.cos(timer) * lightRingRadius
+                this.pointLight1.position.z = Math.sin(timer) * lightRingRadius
+            }
         
-        this.camera.lookAt( this.scene.position )
-        this.renderer.render( this.scene, this.camera )
+            if (this.pointLight2) {
+                this.pointLight2.position.x = Math.sin(timer) * lightRingRadius
+                this.pointLight2.position.z = Math.cos(timer) * lightRingRadius
+            }
+    
+            this.updateDevicePosition()
+            this.updateDeviceRotation()
+            
+            this.camera.lookAt( this.scene.position )
+            this.renderer.render( this.scene, this.camera )
+        }
         requestAnimationFrame( this.animate.bind(this) )
-      }
-      async componentDidMount() {
+    }
+    async componentDidMount() {
         await this.init()
         this.animate()
-      }
+    }
     render () {
         const { className } = this.props
         return (
-            <div className={ className }>
-                <div className="canvas-wrapper">
-                    <div ref={this.canvas}></div>
-                </div>
+            <div className={ className } ref={this.root}>
+                <canvas ref={this.canvas}></canvas>
                 <video ref={this.loopvideo} src={loopvideo} loop={true} muted={true} autoPlay={true} />
             </div>
         )
@@ -219,5 +195,17 @@ video {
     height: 0;
     width: 0;
     left: 100%;
+    opacity: 0;
+}
+canvas {
+    @media screen and (min-width: 960px) {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    @media screen and (max-width: 959px) {
+        position: static;
+    }
 }
 `

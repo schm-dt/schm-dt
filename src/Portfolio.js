@@ -1,17 +1,38 @@
-import React, { Component } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import styled from 'styled-components'
 import { TechList } from './TechList'
+import Devices from './Devices'
+import Container from './Container'
 
 const mtTech = ['React', 'AWS Lambda', 'AWS CloudFront', 'AWS s3']
-class Portfolio extends Component {
-    componentDidMount() {
 
-
+const Portfolio = (props) => {
+    const portfolioItem = useRef(null)
+    const observer = useRef(null)
+    const [isVisible, setIsVisible] = useState(false)
+    
+    const onIntersect = (entries, observer) => {
+        console.log(entries)
+        if (entries[0]) {
+            setIsVisible(entries[0].isIntersecting)
+        }
     }
-    render () {
-        const { className } = this.props
-        return (
-            <div className={ className }>
+
+    useEffect(() => {
+        observer.current = new IntersectionObserver(onIntersect)
+        observer.current.observe(portfolioItem.current)
+    }, [])
+
+    const { className, scrolled, isTouchDevice, orientation, mouse } = props
+    return (
+        <div className={ className } ref={portfolioItem}>
+            <Devices className="device"
+                scrolled={scrolled}
+                isTouchDevice={isTouchDevice}
+                orientation={orientation}
+                isVisible={isVisible}
+                mouse={mouse} />
+            <Container>
                 <div className="portfolio-item">
                     <h3>M+T</h3>
                     <TechList className="tech-list" tech={mtTech} />
@@ -22,51 +43,56 @@ class Portfolio extends Component {
                     <div className="credits">
                         <h5>Project Credits</h5>
                         <ul>
-                            <li><b>Design:</b> Person</li>
-                            <li><b>Other Developers:</b> Person</li>
+                            <li><b>Design:</b> Myself</li>
+                            <li><b>Development:</b> Myself</li>
                         </ul>
                     </div>
-                    
                 </div>
-            </div>
-        )
-    }
+            </Container>
+        </div>
+    )
+
 }
 
 export default styled(Portfolio)`
-height: 300vh;
-max-width: 1100px;
-margin: auto;
-.portfolio-item {
-    max-width: 450px;
-    transition: all 0.6s;
-    ${props => !props.scrolled ? 'filter: blur(5px);' : ''}
-    ${props => !props.scrolled ? 'opacity: 0;' : ''}
-    p {
-        font-size: 14px;
+    position: relative;
+    margin-top: 5rem;
+    margin-bottom: 20rem;
+    transition: opacity  ${props => props.scrolled ? '0.2s 0s' : '0.4s 0s'};
+    opacity: ${props => props.scrolled ? 1 : 0};
+    .container {
+        max-width: 1100px;
+        margin: auto;
     }
-}
-.tech-list {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-hr {
-    display: block;
-    height: 1px;
-    border: 0;
-    width: 100%;
-    background: rgba(255,255,255, 0.1);
-    margin: 1.5rem 0;
-}
-.credits {
-    li {
-        opacity: 0.5;
-        font-size: 12px;
-        margin-bottom: 0.25rem;
+    .portfolio-item {
+        @media screen and (min-width: 960px) {
+            max-width: 450px;
+        }
+        p {
+            font-size: 14px;
+        }
     }
-    h5 {
-        font-weight: bold;
+    .tech-list {
+        margin-top: 0.5rem;
         margin-bottom: 0.5rem;
     }
-}
+    hr {
+        display: block;
+        height: 1px;
+        border: 0;
+        width: 100%;
+        background: rgba(255,255,255, 0.1);
+        margin: 1.5rem 0;
+    }
+    .credits {
+        li {
+            opacity: 0.5;
+            font-size: 12px;
+            margin-bottom: 0.25rem;
+        }
+        h5 {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+    }
 `

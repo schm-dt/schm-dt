@@ -20,6 +20,16 @@ const romeoTech = [
   'WooCommerce',
 ]
 
+const marginTech = [
+  'Gulp',
+  'SASS/SCSS',
+  'ES6',
+  'WordPress',
+  'ACF',
+  'WooCommerce',
+  'cPanel',
+]
+
 export default styled(({ className }) => {
     return (
       <div className={ className }>
@@ -34,19 +44,16 @@ export default styled(({ className }) => {
               <TechList tech={romeoTech} />
             </div>
             <div className="experience-item">
+              <h3>QUT — Sessional Academic Tutor</h3>
+              <span className="experience-item__years">January 2016 &ndash; July 2017</span>
+              <p></p>
+            </div>
+            <div className="experience-item">
               <h3>Margin Media — Lead Developer</h3>
               <span className="experience-item__years">July 2015 &ndash; June 2017</span>
               <p></p>
               <h4>Technologies Used</h4>
-              <ul>
-                <li>Gulp</li>
-                <li>SASS/SCSS</li>
-                <li>ES6</li>
-                <li>WordPress</li>
-                <li>ACF</li>
-                <li>WooCommerce</li>
-                <li>cPanel</li>
-              </ul>
+              <TechList tech={marginTech} />
             </div>
           </div>
         </Container>
@@ -75,18 +82,5 @@ export default styled(({ className }) => {
     @media screen and (max-width: 600px){
       font-size: 1.05rem;
     }
-  }
-  ul {
-    display: block;
-    margin-left: -0.5em;
-    max-width: 600px;
-  }
-  li {
-    display: inline-block;
-    padding: 0.5em;
-    margin-right: 0.5em;
-    margin-bottom: 0.5em;
-    background: rgba(255,255,255, 0.025);
-    border-radius: 6px;
   }
   `
