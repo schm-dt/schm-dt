@@ -1,7 +1,6 @@
-import React from 'react'
-import styled from 'styled-components'
+import styled from "styled-components";
 
-export default styled(({ className, children }) => <div className={ className }>{ children }</div>)`
+export default styled.div`
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -13,4 +12,4 @@ export default styled(({ className, children }) => <div className={ className }>
     max-width: 75rem;
     padding: 0 2.5rem;
   }
-`
+`;
