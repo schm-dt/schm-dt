@@ -17,6 +17,9 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - run:
-          aws s3 sync ./build s3://${{ secrets.FRONTEND_NAME }}
+      - run: aws s3 sync ./build s3://${{ secrets.FRONTEND_NAME }}
+      - name: Configure Terraform CLI
+        uses: hashicorp/setup-terraform@v1
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_TOKEN }}
           # - aws cloudfront create-invalidation --distribution-id E1JF94CYWJSGD8 --paths "/*"

@@ -10,17 +10,27 @@ terraform {
 }
 
 provider "aws" {
-  region     = "ap-southeast-2"
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
-  version    = "2.68"
-}
-
-provider "aws" {
-  alias      = "east"
   region     = "us-east-1"
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
+  access_key = var.aws_access_key_id
+  secret_key = var.aws_secret_access_key
   version    = "2.68"
 }
 
+data "aws_route53_zone" "domain" {
+  name = var.domain_zone_name
+}
+
+module "frontend" {
+  source = "./modules/s3-cloudfront-static-site"
+
+  providers = {
+    aws = aws
+  }
+
+  domain_zone_id = data.aws_route53_zone.domain.id
+  site_domain    = var.site_domain
+
+  tags = {
+    Environment = var.env
+  }
+}
