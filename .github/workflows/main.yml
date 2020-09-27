@@ -1,27 +1,49 @@
 name: Main
-on: push
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   build:
     name: Build and Deploy
     runs-on: ubuntu-latest
     steps:
+      # Setup
       - name: Checkout
         uses: actions/checkout@v2
-      - run: npm install
-      - run: npm run build
-      - run: ls -lah
+
+      # Build
+      # - name: Build
+      #   run: |
+      #     npm install
+      #     npm run build
+
+      # Configure AWS
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - run: aws s3 sync ./build s3://${{ secrets.FRONTEND_NAME }}
-      - name: Invalidate CloudFront Cache
+
+      # Deploy
+      # - name: Deploy
+      #   run: aws s3 sync ./build s3://${{ secrets.FRONTEND_NAME }}
+
+      # Configure Terraform
+      - name: Configure Terraform Credentials
         uses: hashicorp/setup-terraform@v1
         with:
           cli_config_credentials_token: ${{ secrets.TF_TOKEN }}
-      - run:
-          cd terraform && terraform init && terraform state pull > state.tfstate && cat state.tfstate
-          # - aws cloudfront create-invalidation --distribution-id E1JF94CYWJSGD8 --paths "/*"
+
+      # Invalidate CloudFront Cache
+      - name: Invalidate CloudFront Cache
+        run: |
+          cd terraform && terraform init
+          terraform --version
+          terraform state pull > state
+          cat state
+          cat state | jq -r .
+          # cat state | jq -r '.resources[] | select(.name == "app_frontend_distribution") | .instances[0].attributes.id'
+          # aws cloudfront create-invalidation --distribution-id $(cat state | jq -r '.resources[] | select(.name == "app_frontend_distribution") | .instances[0].attributes.id') --paths "/index.html"
