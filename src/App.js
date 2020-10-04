@@ -1,131 +1,64 @@
-import React, { Component } from "react";
-import throttle from "lodash.throttle";
+import React, { Fragment, Suspense, useRef } from "react";
+import styled from "styled-components";
+import { Canvas } from "react-three-fiber";
+import { useWindowScroll, useMouse } from "react-use";
+import { useSpring, animated } from "react-spring";
 
 import Intro from "./components/Intro";
 import Experiences from "./components/Experiences";
-import { isTouchDevice } from "./lib";
-import Skull from "./components/Skull";
+import { Skull } from "./components/Skull";
+import { BackgroundPanel } from "./components/BackgroundPanel";
+import { Lights } from "./components/Lights";
 
-const smoothingThreshold = 10;
+const CanvasContainer = styled(animated.div)`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+`;
 
-class App extends Component {
-  constructor(props) {
-    super(props);
+const CAMERA_CONFIG = {
+  fov: 45,
+  near: 1,
+  far: 2000,
+  position: [0, 400, 0],
+};
 
-    this.state = {
-      mouse: [
-        {
-          x: 0.5,
-          y: 0.5,
-        },
-      ],
-      orientation: [
-        {
-          alpha: 0,
-          beta: 0,
-          gamma: 0,
-        },
-      ],
-      scroll: [0],
-      isTouchDevice: isTouchDevice(),
-      windowHeight: window.innerHeight,
-      windowWidth: window.innerWidth,
-    };
-  }
+const getOpacityFromY = (y) =>
+  (y === undefined ? y : window.scrollY) > window.innerHeight / 2 ? 0.2 : 1;
 
-  onOrientation(e) {
-    const orientation = [...this.state.orientation];
+export default () => {
+  const canvasRef = useRef();
 
-    if (orientation.length >= smoothingThreshold) {
-      orientation.shift();
-    }
+  const { y } = useWindowScroll();
 
-    orientation.push({
-      alpha: e.alpha,
-      beta: e.beta,
-      gamma: e.gamma,
-    });
+  const mouse = useMouse(canvasRef);
 
-    this.setState({ orientation });
-  }
+  const canvasStyles = useSpring({
+    from: {
+      opacity: getOpacityFromY(y),
+    },
+    opacity: getOpacityFromY(y),
+  });
 
-  onMouseMove(e) {
-    const mouse = [...this.state.mouse];
-
-    if (mouse.length >= smoothingThreshold) {
-      mouse.shift();
-    }
-
-    mouse.push({
-      x: e.clientX / window.innerWidth - 0.5,
-      y: 1 - e.clientY / window.innerHeight,
-    });
-
-    this.setState({ mouse });
-  }
-  onScroll() {
-    const scroll = [...this.state.scroll];
-
-    if (scroll.length >= smoothingThreshold) {
-      scroll.shift();
-    }
-
-    scroll.push(window.scrollY);
-
-    this.setState({ scroll });
-  }
-
-  updateWindowSize() {
-    this.setState({
-      windowHeight: window.innerHeight,
-      windowWidth: window.innerWidth,
-    });
-  }
-
-  componentDidMount() {
-    window.addEventListener(
-      "resize",
-      throttle(this.updateWindowSize.bind(this), 100)
-    );
-
-    window.addEventListener(
-      "deviceorientation",
-      throttle((e) => this.onOrientation(e), 30)
-    );
-
-    window.addEventListener(
-      "mousemove",
-      throttle((e) => this.onMouseMove(e), 30)
-    );
-
-    window.addEventListener(
-      "scroll",
-      throttle((e) => this.onScroll(), 200)
-    );
-
-    this.onScroll();
-  }
-
-  scrolled() {
-    return this.state.scroll[this.state.scroll.length - 1] > 50;
-  }
-
-  render() {
-    const { className } = this.props;
-
-    return (
-      <div className={className}>
-        <Skull
-          scrolled={this.scrolled()}
-          isTouchDevice={this.state.isTouchDevice}
-          orientation={this.state.orientation}
-          mouse={this.state.mouse}
-        />
-        <Intro />
-        <Experiences />
-      </div>
-    );
-  }
-}
-
-export default App;
+  return (
+    <Fragment>
+      <CanvasContainer
+        id="canvas-container"
+        ref={canvasRef}
+        style={canvasStyles}
+      >
+        <Canvas camera={CAMERA_CONFIG}>
+          <BackgroundPanel />
+          <Lights />
+          <Suspense fallback={null}>
+            <Skull mouse={mouse} />
+          </Suspense>
+        </Canvas>
+      </CanvasContainer>
+      <Intro />
+      <Experiences />
+    </Fragment>
+  );
+};

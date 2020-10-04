@@ -6,6 +6,8 @@ import Container from "./Container";
 const Component = styled(Container)`
   padding-top: 20vh;
   padding-bottom: 20vh;
+  position: relative;
+  min-height: 100vh;
   @media screen and (max-width: 600px) {
     padding-top: 15vh;
     padding-bottom: 15vh;
@@ -13,7 +15,6 @@ const Component = styled(Container)`
   @media screen and (min-width: 601px) {
     padding-top: 30vh;
     padding-bottom: 30vh;
-    min-height: 100vh;
     display: flex;
     align-items: center;
   }

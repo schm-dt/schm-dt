@@ -17,7 +17,6 @@ const Portfolio = (props) => {
   const [isVisible, setIsVisible] = useState(false);
 
   const onIntersect = (entries, observer) => {
-    console.log(entries);
     if (entries[0]) {
       setIsVisible(entries[0].isIntersecting);
     }

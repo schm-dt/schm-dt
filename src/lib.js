@@ -67,3 +67,5 @@ export const isTouchDevice = () => {
 
   return mq(query);
 };
+
+export const clamp = (min, max, value) => Math.min(Math.max(min, value), max);

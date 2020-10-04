@@ -33,10 +33,10 @@ const MARGIN_TECH = [
 ];
 
 const Component = styled.div`
-  padding: 3rem;
   min-height: 100vh;
   align-items: center;
   display: flex;
+  position: relative;
 `;
 
 const ExperienceItems = styled.div`
@@ -53,6 +53,7 @@ const ExperienceHeading = styled.h4`
   font-weight: 600;
   margin: 2em 0 1em;
   display: block;
+  line-height: 1.2;
   @media screen and (max-width: 600px) {
     font-size: 1.05rem;
   }
