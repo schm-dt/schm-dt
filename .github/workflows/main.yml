@@ -16,8 +16,9 @@ jobs:
       # Build
       - name: Build
         run: |
-          npm install
-          npm run build
+          yarn install -W
+          npx lerna bootstrap
+          npx lerna run build
 
       # Configure AWS
       - name: Configure AWS credentials
@@ -29,7 +30,10 @@ jobs:
 
       # Deploy
       - name: Deploy
-        run: aws s3 sync ./build s3://${{ secrets.FRONTEND_NAME }}
+        run: |
+          cd packages/schm-dt.com
+          ls -lah
+          aws s3 sync ./build s3://${{ secrets.FRONTEND_NAME }}
 
       # Configure Terraform
       # - name: Configure Terraform Credentials
