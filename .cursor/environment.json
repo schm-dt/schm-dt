@@ -1,0 +1,10 @@
+{
+  "name": "schm-dt.com",
+  "install": "yarn install --frozen-lockfile",
+  "terminals": [
+    {
+      "name": "dev-server",
+      "command": "cd packages/schm-dt.com && NODE_OPTIONS=--openssl-legacy-provider BROWSER=none yarn start"
+    }
+  ]
+}
